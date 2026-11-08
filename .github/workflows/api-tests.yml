@@ -1,0 +1,32 @@
+name: api-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Subir Serverest local
+        run: |
+          npx --yes serverest@latest > serverest.log 2>&1 &
+          npx --yes wait-on http://localhost:3000/produtos --timeout 60000
+      - run: pytest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: relatorio-pytest
+          path: report/
